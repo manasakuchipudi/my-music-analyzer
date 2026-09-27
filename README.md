@@ -17,3 +17,10 @@ Spotify tracks their users data in JSON files. The Python code loads those files
 - track name
 - listening timestamp
 - milliseconds played
+
+## Technologies used
+- Codex
+- GitHub
+- Python
+- HTML
+- Git
