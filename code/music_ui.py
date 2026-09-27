@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-from musicanalyser import DEFAULT_DATA_PATH, find_json_files, load_json_records
+from music_analyzer import DEFAULT_DATA_PATH, find_json_files, load_json_records
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

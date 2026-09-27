@@ -13,7 +13,7 @@ from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "code"))
-from musicanalyser import load_json_records
+from music_analyzer import load_json_records
 from music_ui import MusicUIHandler, build_analysis
 
 
@@ -76,10 +76,10 @@ class AnalysisTests(unittest.TestCase):
             build_analysis(self.path)
 
     def test_cli_demo_and_invalid_limit(self):
-        result = subprocess.run([sys.executable, str(ROOT / "code/musicanalyser.py"), "--top", "3"], capture_output=True, text=True)
+        result = subprocess.run([sys.executable, str(ROOT / "code/music_analyzer.py"), "--top", "3"], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Total records: 720", result.stdout)
-        result = subprocess.run([sys.executable, str(ROOT / "code/musicanalyser.py"), "--top", "0"], capture_output=True)
+        result = subprocess.run([sys.executable, str(ROOT / "code/music_analyzer.py"), "--top", "0"], capture_output=True)
         self.assertEqual(result.returncode, 2)
 
     def test_http_routes_and_errors(self):
