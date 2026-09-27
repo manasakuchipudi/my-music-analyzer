@@ -1,0 +1,1056 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Music Listening Analyzer</title>
+  <style>
+    :root {
+      --ink: #202124;
+      --muted: #6d747c;
+      --line: #d9dde2;
+      --paper: #f7f8f4;
+      --surface: #ffffff;
+      --green: #2e7d5b;
+      --coral: #d95d39;
+      --gold: #c4911f;
+      --blue: #3777b8;
+      --shadow: 0 16px 40px rgba(32, 33, 36, 0.09);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px clamp(18px, 4vw, 46px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.74);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .brand {
+      min-width: 220px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 3vw, 2.25rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(190px, 260px) auto minmax(160px, 220px);
+      gap: 14px;
+      align-items: center;
+    }
+
+    .search,
+    .slider-wrap {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 0.77rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    input[type="search"] {
+      width: 100%;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 12px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--green);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      min-width: 170px;
+      height: 38px;
+    }
+
+    .segmented button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .segmented button.active {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    main {
+      padding: 26px clamp(18px, 4vw, 46px) 44px;
+    }
+
+    .section {
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 0 10px;
+    }
+
+    .section-title h2 {
+      font-size: 1.08rem;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 14px;
+    }
+
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 104px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: clamp(1.55rem, 3vw, 2.1rem);
+      line-height: 1.1;
+      margin-top: 8px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.1fr) minmax(300px, 0.9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .two-up {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.85fr) minmax(320px, 1.15fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .list-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 0.86rem;
+      white-space: nowrap;
+    }
+
+    .bars {
+      padding: 10px 14px 16px;
+      display: grid;
+      gap: 8px;
+      max-height: 620px;
+      overflow: auto;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(112px, 190px) 1fr minmax(56px, auto);
+      gap: 10px;
+      align-items: center;
+      min-height: 34px;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 2px 0;
+      text-align: left;
+    }
+
+    .bar-row:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .bar-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .bar-track {
+      height: 14px;
+      background: #ecefe7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--coral));
+      border-radius: inherit;
+      transition: width 260ms ease;
+    }
+
+    .bar-fill.skip {
+      background: linear-gradient(90deg, var(--coral), var(--gold));
+    }
+
+    .bar-value {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .visual-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .canvas-wrap {
+      padding: 14px 16px 18px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 260px;
+    }
+
+    #heatmap {
+      height: 230px;
+    }
+
+    .details {
+      padding: 16px 18px 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .details-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .details-title strong {
+      font-size: 1.2rem;
+    }
+
+    .mini-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .mini {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcf9;
+    }
+
+    .mini span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .mini strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.25rem;
+    }
+
+    .tracks {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+      max-height: 212px;
+      overflow: auto;
+    }
+
+    .tracks li {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 9px 0;
+      border-bottom: 1px solid #edf0e9;
+      font-size: 0.92rem;
+    }
+
+    .tracks span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tracks span:last-child {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .recommendations {
+      padding: 14px 16px 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .recommendation {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      background: #fbfcf9;
+      display: grid;
+      gap: 10px;
+      min-height: 148px;
+    }
+
+    .rec-title {
+      display: grid;
+      gap: 3px;
+    }
+
+    .rec-title strong,
+    .rec-title span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rec-title strong {
+      font-size: 0.98rem;
+    }
+
+    .rec-title span {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .rec-reason {
+      color: var(--ink);
+      font-size: 0.88rem;
+      line-height: 1.35;
+    }
+
+    .rec-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .rec-stat {
+      border-top: 1px solid #edf0e9;
+      padding-top: 7px;
+      min-width: 0;
+    }
+
+    .rec-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .rec-stat strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.88rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .insights {
+      padding: 14px 16px 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .insight {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      background: #fbfcf9;
+      min-height: 94px;
+      display: grid;
+      align-content: start;
+      gap: 5px;
+    }
+
+    .insight span {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .insight strong {
+      font-size: 1.2rem;
+      line-height: 1.12;
+    }
+
+    .insight small {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .session-split {
+      padding: 0 16px 18px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .split-row {
+      display: grid;
+      grid-template-columns: 88px 1fr 54px;
+      gap: 10px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .split-track {
+      height: 12px;
+      border-radius: 999px;
+      background: #ecefe7;
+      overflow: hidden;
+    }
+
+    .split-fill {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--green);
+    }
+
+    .split-fill.browsing {
+      background: var(--coral);
+    }
+
+    .split-fill.mixed {
+      background: var(--gold);
+    }
+
+    .loading {
+      padding: 26px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        position: static;
+        display: grid;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics,
+      .grid,
+      .two-up {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .metrics {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .metric {
+        min-height: 96px;
+      }
+
+      .bar-row {
+        grid-template-columns: minmax(90px, 118px) 1fr 52px;
+      }
+
+      canvas {
+        height: 230px;
+      }
+
+      .recommendations,
+      .insights {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Music Listening Analyzer</h1>
+        <p class="subtitle">Personal listening dashboard</p>
+      </div>
+      <div class="controls">
+        <div class="search">
+          <label for="artistSearch">Artist filter</label>
+          <input id="artistSearch" type="search" placeholder="Search artists">
+        </div>
+        <div>
+          <label>Rank by</label>
+          <div class="segmented" aria-label="Rank artists by">
+            <button id="minutesMode" class="active" type="button">Time</button>
+            <button id="playsMode" type="button">Plays</button>
+          </div>
+        </div>
+        <div class="slider-wrap">
+          <label for="topSlider">Top artists: <span id="topValue">15</span></label>
+          <input id="topSlider" type="range" min="5" max="40" value="15">
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" aria-labelledby="overviewTitle">
+        <div class="section-title">
+          <h2 id="overviewTitle">Overview</h2>
+          <span id="dateRange">Loading your Spotify history...</span>
+        </div>
+        <div class="metrics" id="metrics"></div>
+      </section>
+
+      <section class="section two-up" aria-label="Recommendations and listening patterns">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Listening Patterns</h2>
+            <span class="panel-note">Sessions and habits</span>
+          </div>
+          <div class="insights" id="sessionInsights">
+            <div class="loading">Reading sessions...</div>
+          </div>
+          <div class="session-split" id="sessionSplit"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Rediscover Your Music</h2>
+            <span class="panel-note">Based on your listens</span>
+          </div>
+          <div class="recommendations" id="recommendations">
+            <div class="loading">Finding recommendations...</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="section grid" aria-label="Skips, artists, and charts">
+        <div class="list-stack">
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Artist Ranking</h2>
+              <span class="panel-note">Click an artist</span>
+            </div>
+            <div class="bars" id="artistBars">
+              <div class="loading">Loading artists...</div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Most Skipped Songs</h2>
+              <span class="panel-note">Under 30 seconds</span>
+            </div>
+            <div class="bars" id="skippedBars">
+              <div class="loading">Loading skipped songs...</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="visual-stack">
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Listening Timeline</h2>
+              <span class="panel-note">Minutes per month</span>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="timeline"></canvas>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Weekly Listening Heatmap</h2>
+              <span class="panel-note">Darker means more plays</span>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="heatmap"></canvas>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="details" id="details">
+              <div class="loading">Choose an artist to inspect.</div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      data: null,
+      mode: "minutes",
+      selectedArtist: null
+    };
+
+    const artistBars = document.querySelector("#artistBars");
+    const skippedBars = document.querySelector("#skippedBars");
+    const details = document.querySelector("#details");
+    const metrics = document.querySelector("#metrics");
+    const recommendations = document.querySelector("#recommendations");
+    const sessionInsights = document.querySelector("#sessionInsights");
+    const sessionSplit = document.querySelector("#sessionSplit");
+    const searchInput = document.querySelector("#artistSearch");
+    const topSlider = document.querySelector("#topSlider");
+    const topValue = document.querySelector("#topValue");
+    const minutesMode = document.querySelector("#minutesMode");
+    const playsMode = document.querySelector("#playsMode");
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[char]);
+    }
+
+    function formatNumber(value) {
+      return new Intl.NumberFormat().format(Math.round(value));
+    }
+
+    function formatTime(minutes) {
+      const hours = Math.floor(Math.round(minutes) / 60);
+      const mins = Math.round(minutes) % 60;
+      return `${formatNumber(hours)}h ${String(mins).padStart(2, "0")}m`;
+    }
+
+    function resizeCanvas(canvas) {
+      const ratio = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return { ctx, width: rect.width, height: rect.height };
+    }
+
+    async function loadData() {
+      const response = await fetch("/api/analysis?top=80");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to load history");
+      state.data = data;
+      state.selectedArtist = state.data.artists[0]?.artist || null;
+      render();
+    }
+
+    function render() {
+      renderMetrics();
+      renderArtists();
+      renderSkippedTracks();
+      renderTimeline();
+      renderHeatmap();
+      renderRecommendations();
+      renderSessionInsights();
+      renderDetails();
+    }
+
+    function renderMetrics() {
+      const summary = state.data.summary;
+      document.querySelector("#dateRange").textContent = summary.firstPlay ? `${summary.firstPlay} to ${summary.lastPlay}` : "No dated listening records";
+      metrics.innerHTML = [
+        ["Total time", formatTime(summary.totalMinutes)],
+        ["Plays", formatNumber(summary.records)],
+        ["Skipped", `${formatNumber(summary.skippedCount)} (${summary.skipRate}%)`],
+        ["Tracks", formatNumber(summary.trackCount)]
+      ].map(([label, value]) => `
+        <div class="metric">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </div>
+      `).join("");
+    }
+
+    function filteredArtists() {
+      const query = searchInput.value.trim().toLowerCase();
+      const limit = Number(topSlider.value);
+      return state.data.artists
+        .filter(item => item.artist.toLowerCase().includes(query))
+        .sort((a, b) => b[state.mode] - a[state.mode])
+        .slice(0, limit);
+    }
+
+    function renderArtists() {
+      const artists = filteredArtists();
+      const maxValue = Math.max(...artists.map(item => item[state.mode]), 1);
+
+      if (!artists.length) {
+        artistBars.innerHTML = `<div class="loading">No artists match that filter.</div>`;
+        return;
+      }
+
+      artistBars.innerHTML = artists.map(item => {
+        const value = item[state.mode];
+        const width = Math.max(3, (value / maxValue) * 100);
+        const label = state.mode === "minutes" ? formatTime(value) : formatNumber(value);
+        const selected = item.artist === state.selectedArtist ? "true" : "false";
+
+        return `
+          <button class="bar-row" type="button" data-artist="${encodeURIComponent(item.artist)}" aria-pressed="${selected}">
+            <span class="bar-name" title="${escapeHtml(item.artist)}">${escapeHtml(item.artist)}</span>
+            <span class="bar-track"><span class="bar-fill" style="width:${width}%"></span></span>
+            <span class="bar-value">${label}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderSessionInsights() {
+      const insights = state.data.sessionInsights;
+      const sessionTypes = [
+        ["Deep", insights.deepSessions, "deep"],
+        ["Browsing", insights.browsingSessions, "browsing"],
+        ["Mixed", insights.mixedSessions, "mixed"]
+      ];
+      const totalSessions = Math.max(insights.totalSessions, 1);
+
+      sessionInsights.innerHTML = [
+        ["Average session length", formatTime(insights.averageSessionMinutes), `${formatNumber(insights.totalSessions)} sessions found`],
+        ["Most common listening hour", insights.mostCommonHour, "Your busiest hour by play count"],
+        ["Highest-skip session type", insights.highestSkipSessionType, `${insights.highestSkipSessionRate}% skipped`],
+        ["Longest listening streak", `${formatNumber(insights.longestListeningStreakDays)} days`, "Consecutive days with at least one play"]
+      ].map(([label, value, note]) => `
+        <div class="insight">
+          <span>${label}</span>
+          <strong>${value}</strong>
+          <small>${note}</small>
+        </div>
+      `).join("");
+
+      sessionSplit.innerHTML = sessionTypes.map(([label, value, kind]) => {
+        const pct = Math.round((value / totalSessions) * 100);
+        return `
+          <div class="split-row">
+            <span>${label}</span>
+            <span class="split-track"><span class="split-fill ${kind}" style="width:${Math.max(2, pct)}%"></span></span>
+            <span>${pct}%</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderRecommendations() {
+      const rows = state.data.recommendations || [];
+
+      if (!rows.length) {
+        recommendations.innerHTML = `<div class="loading">No recommendations found yet.</div>`;
+        return;
+      }
+
+      recommendations.innerHTML = rows.slice(0, 6).map(item => `
+        <article class="recommendation">
+          <div class="rec-title">
+            <strong title="${escapeHtml(item.track)}">${escapeHtml(item.track)}</strong>
+            <span title="${escapeHtml(item.artist)}">${escapeHtml(item.artist)}</span>
+          </div>
+          <div class="rec-reason">${escapeHtml(item.reason)}</div>
+          <div class="rec-stats">
+            <div class="rec-stat"><span>Plays</span><strong>${formatNumber(item.plays)}</strong></div>
+            <div class="rec-stat"><span>Time</span><strong>${formatTime(item.minutes)}</strong></div>
+            <div class="rec-stat"><span>Skips</span><strong>${item.skipRate}%</strong></div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderSkippedTracks() {
+      const rows = state.data.skippedTracks.slice(0, Number(topSlider.value));
+      const maxSkips = Math.max(...rows.map(item => item.skips), 1);
+
+      if (!rows.length) {
+        skippedBars.innerHTML = `<div class="loading">No skipped songs found.</div>`;
+        return;
+      }
+
+      skippedBars.innerHTML = rows.map(item => {
+        const width = Math.max(3, (item.skips / maxSkips) * 100);
+        const label = `${formatNumber(item.skips)} skips`;
+
+        return `
+          <div class="bar-row" title="${escapeHtml(item.track)}">
+            <span class="bar-name">${escapeHtml(item.track)}</span>
+            <span class="bar-track"><span class="bar-fill skip" style="width:${width}%"></span></span>
+            <span class="bar-value">${label}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTimeline() {
+      const canvas = document.querySelector("#timeline");
+      const { ctx, width, height } = resizeCanvas(canvas);
+      const data = state.data.monthly;
+      const pad = { left: 42, right: 18, top: 22, bottom: 34 };
+      const chartWidth = width - pad.left - pad.right;
+      const chartHeight = height - pad.top - pad.bottom;
+      const maxValue = Math.max(...data.map(item => item.minutes), 1);
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.strokeStyle = "#d9dde2";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, pad.top);
+      ctx.lineTo(pad.left, pad.top + chartHeight);
+      ctx.lineTo(pad.left + chartWidth, pad.top + chartHeight);
+      ctx.stroke();
+
+      ctx.fillStyle = "#6d747c";
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.fillText(formatTime(maxValue), 0, pad.top + 4);
+      ctx.fillText("0h", 18, pad.top + chartHeight);
+
+      const points = data.map((item, index) => {
+        const x = pad.left + (data.length === 1 ? 0 : (index / (data.length - 1)) * chartWidth);
+        const y = pad.top + chartHeight - (item.minutes / maxValue) * chartHeight;
+        return { x, y, item };
+      });
+
+      ctx.beginPath();
+      points.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.strokeStyle = "#2e7d5b";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.lineTo(pad.left + chartWidth, pad.top + chartHeight);
+      ctx.lineTo(pad.left, pad.top + chartHeight);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(46, 125, 91, 0.16)";
+      ctx.fill();
+
+      points.forEach(point => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = "#d95d39";
+        ctx.fill();
+      });
+
+      ctx.fillStyle = "#6d747c";
+      ctx.textAlign = "center";
+      data.forEach((item, index) => {
+        if (index % Math.ceil(data.length / 5) === 0 || index === data.length - 1) {
+          const x = pad.left + (data.length === 1 ? 0 : (index / (data.length - 1)) * chartWidth);
+          ctx.fillText(item.month.slice(5), x, height - 10);
+        }
+      });
+      ctx.textAlign = "left";
+    }
+
+    function renderHeatmap() {
+      const canvas = document.querySelector("#heatmap");
+      const { ctx, width, height } = resizeCanvas(canvas);
+      const data = state.data.weekdayHour;
+      const maxValue = Math.max(...data.map(item => item.plays), 1);
+      const pad = { left: 38, right: 10, top: 10, bottom: 24 };
+      const gridWidth = width - pad.left - pad.right;
+      const gridHeight = height - pad.top - pad.bottom;
+      const cellWidth = gridWidth / 24;
+      const cellHeight = gridHeight / 7;
+      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.fillStyle = "#6d747c";
+
+      days.forEach((day, index) => {
+        ctx.fillText(day, 4, pad.top + index * cellHeight + cellHeight * 0.63);
+      });
+
+      data.forEach(item => {
+        const intensity = item.plays / maxValue;
+        const x = pad.left + item.hour * cellWidth;
+        const y = pad.top + item.weekday * cellHeight;
+        ctx.fillStyle = `rgba(217, 93, 57, ${0.08 + intensity * 0.82})`;
+        ctx.fillRect(x + 1, y + 1, Math.max(1, cellWidth - 2), Math.max(1, cellHeight - 2));
+      });
+
+      ctx.fillStyle = "#6d747c";
+      ctx.textAlign = "center";
+      [0, 6, 12, 18, 23].forEach(hour => {
+        const x = pad.left + hour * cellWidth + cellWidth / 2;
+        ctx.fillText(`${hour}:00`, x, height - 6);
+      });
+      ctx.textAlign = "left";
+    }
+
+    function renderDetails() {
+      const artist = state.data.artists.find(item => item.artist === state.selectedArtist) || state.data.artists[0];
+      if (!artist) {
+        details.innerHTML = `<div class="loading">No artist data available.</div>`;
+        return;
+      }
+
+      const tracks = state.data.artistTracks[artist.artist] || [];
+
+      details.innerHTML = `
+        <div class="details-title">
+          <strong>${escapeHtml(artist.artist)}</strong>
+          <span class="panel-note">Selected artist</span>
+        </div>
+        <div class="mini-metrics">
+          <div class="mini"><span>Listening time</span><strong>${formatTime(artist.minutes)}</strong></div>
+          <div class="mini"><span>Plays</span><strong>${formatNumber(artist.plays)}</strong></div>
+        </div>
+        <h2>Top tracks</h2>
+        <ul class="tracks">
+          ${tracks.length ? tracks.map(item => `
+            <li><span title="${escapeHtml(item.track)}">${escapeHtml(item.track)}</span><span>${formatNumber(item.plays)}</span></li>
+          `).join("") : `<li><span>No matching track details in top list.</span><span></span></li>`}
+        </ul>
+      `;
+    }
+
+    artistBars.addEventListener("click", event => {
+      const button = event.target.closest(".bar-row");
+      if (!button) return;
+      state.selectedArtist = decodeURIComponent(button.dataset.artist);
+      renderArtists();
+      renderDetails();
+    });
+
+    searchInput.addEventListener("input", renderArtists);
+    topSlider.addEventListener("input", () => {
+      topValue.textContent = topSlider.value;
+      renderArtists();
+      renderSkippedTracks();
+    });
+
+    minutesMode.addEventListener("click", () => {
+      state.mode = "minutes";
+      minutesMode.classList.add("active");
+      playsMode.classList.remove("active");
+      renderArtists();
+    });
+
+    playsMode.addEventListener("click", () => {
+      state.mode = "plays";
+      playsMode.classList.add("active");
+      minutesMode.classList.remove("active");
+      renderArtists();
+    });
+
+    window.addEventListener("resize", () => {
+      if (!state.data) return;
+      renderTimeline();
+      renderHeatmap();
+    });
+
+    loadData().catch(error => {
+      document.body.innerHTML = `<main><div class="loading">Could not load analysis data: ${escapeHtml(error.message)}</div></main>`;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Personal exports stay local; the public demo lives in examples/.
+/spotify-data/
+/StreamingHistory*.json
+/Streaming_History*.json
+.env
+.env.*
+!.env.example
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.coverage
+htmlcov/
+.pytest_cache/
